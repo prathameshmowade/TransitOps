@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authenticateUser } from '../services/db';
+import { authenticateUser, getAll, create } from '../services/db';
 
 const AuthContext = createContext(null);
 
@@ -31,6 +31,18 @@ export function AuthProvider({ children }) {
     return { success: true, user: userData };
   };
 
+  const register = (name, email, role, password) => {
+    const users = getAll('users');
+    const existing = users.find(u => u.email === email);
+    if (existing) {
+      return { success: false, error: 'Account with this email already exists.' };
+    }
+    const newUser = create('users', { name, email, role, password });
+    const userData = { id: newUser.id, email: newUser.email, role: newUser.role, name: newUser.name };
+    setUser(userData);
+    return { success: true, user: userData };
+  };
+
   const logout = () => {
     setUser(null);
   };
@@ -49,7 +61,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, hasAccess }}>
+    <AuthContext.Provider value={{ user, login, register, logout, hasAccess }}>
       {children}
     </AuthContext.Provider>
   );

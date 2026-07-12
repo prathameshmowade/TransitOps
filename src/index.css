@@ -47,6 +47,42 @@
   box-sizing: border-box;
 }
 
+/* ── Dark Mode Theme ── */
+[data-theme="dark"] {
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-light: rgba(59, 130, 246, 0.15);
+  --accent: #f59e0b;
+  --accent-hover: #d97706;
+
+  --success: #22c55e;
+  --success-light: rgba(34, 197, 94, 0.15);
+  --warning: #f59e0b;
+  --warning-light: rgba(245, 158, 11, 0.15);
+  --danger: #ef4444;
+  --danger-light: rgba(239, 68, 68, 0.15);
+  --info: #38bdf8;
+  --info-light: rgba(56, 189, 248, 0.15);
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-inverse: #0f172a;
+
+  --bg-primary: #1e293b;
+  --bg-secondary: #0f172a;
+  --bg-tertiary: #334155;
+  --bg-dark: #0f172a;
+  --bg-dark-subtle: #1e293b;
+
+  --border: #334155;
+  --border-hover: #475569;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4), 0 2px 4px -1px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5), 0 4px 6px -2px rgba(0,0,0,0.3);
+}
+
 *, *::before, *::after { box-sizing: inherit; }
 
 body, html {
@@ -342,3 +378,101 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 .empty-state-icon { font-size: 2rem; margin-bottom: 0.5rem; }
 .empty-state-text { font-size: 0.9rem; }
+
+/* ── Premium 3D Micro-Animations ── */
+.kpi-card, .card, .analytics-card, .trip-card, .live-trip-card, .profile-card, .settings-general-panel, .settings-rbac-section, .settings-section-card, .maintenance-form-panel {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.25s ease;
+}
+
+.kpi-card:hover, .card:hover, .analytics-card:hover, .trip-card:hover, .live-trip-card:hover, .profile-card:hover, .settings-general-panel:hover, .settings-rbac-section:hover, .settings-section-card:hover, .maintenance-form-panel:hover {
+  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(-5px) translateZ(8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: var(--primary);
+}
+
+[data-theme="dark"] .kpi-card:hover, 
+[data-theme="dark"] .card:hover, 
+[data-theme="dark"] .analytics-card:hover, 
+[data-theme="dark"] .trip-card:hover, 
+[data-theme="dark"] .live-trip-card:hover,
+[data-theme="dark"] .profile-card:hover,
+[data-theme="dark"] .settings-general-panel:hover,
+[data-theme="dark"] .settings-rbac-section:hover,
+[data-theme="dark"] .settings-section-card:hover,
+[data-theme="dark"] .maintenance-form-panel:hover {
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.45), 0 5px 15px rgba(0, 0, 0, 0.35);
+}
+
+/* Layered Parallax floating elements inside cards when hovered */
+.kpi-card:hover .kpi-value,
+.analytics-card:hover .analytics-card-value {
+  transform: translateZ(25px) scale(1.05);
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.kpi-card:hover .kpi-label,
+.analytics-card:hover .analytics-card-label {
+  transform: translateZ(15px);
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.card:hover h2, .card:hover h3, .card:hover .section-title {
+  transform: translateZ(15px);
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Add transition to children classes to make the transition super smooth */
+.kpi-value, .kpi-label, .analytics-card-value, .analytics-card-label, .section-title {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+/* Smooth modal entry in 3D scale-up */
+.modal-overlay {
+  perspective: 1200px;
+}
+
+.modal {
+  transform-style: preserve-3d;
+  animation: modalIn3D 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalIn3D {
+  from {
+    transform: rotateX(20deg) scale(0.9) translateZ(-100px);
+    opacity: 0;
+  }
+  to {
+    transform: rotateX(0deg) scale(1) translateZ(0);
+    opacity: 1;
+  }
+}
+
+/* ── Dashboard Card 3D Animation Overrides ── */
+.dashboard .kpi-card,
+.dashboard .card,
+.dashboard .live-map-card {
+  transform: none !important;
+  transform-style: flat !important;
+  perspective: none !important;
+}
+
+.dashboard .kpi-card:hover,
+.dashboard .card:hover,
+.dashboard .live-map-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: var(--shadow-md) !important;
+  border-color: var(--primary) !important;
+}
+
+.dashboard .kpi-card:hover .kpi-value,
+.dashboard .kpi-card:hover .kpi-label,
+.dashboard .card:hover h2,
+.dashboard .card:hover h3,
+.dashboard .card:hover .section-title {
+  transform: none !important;
+}
+
+

@@ -235,3 +235,16 @@
   .topbar { padding: 0.75rem 1rem; }
   .page-content { padding: 1rem; }
 }
+
+/* Toast Entrance animation */
+@keyframes toastIn {
+  0% {
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+

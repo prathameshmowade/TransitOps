@@ -12,12 +12,66 @@ const statusBadgeMap = {
 
 const kpiColors = ['#2563eb', '#16a34a', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981'];
 
+const nodeCoords = {
+  'gandhinagar': { x: 80, y: 50 },
+  'ahmedabad': { x: 250, y: 100 },
+  'sanand': { x: 150, y: 180 },
+  'vatva': { x: 380, y: 140 },
+  'naroda': { x: 340, y: 60 },
+  'kalol': { x: 80, y: 50 },
+  'sarkhej': { x: 250, y: 100 }
+};
+
+const getRouteCoordinates = (source, destination, progress) => {
+  const src = (source || '').toLowerCase();
+  const dest = (destination || '').toLowerCase();
+
+  let pStart = { x: 80, y: 50 };
+  let pEnd = { x: 250, y: 100 };
+
+  for (let key in nodeCoords) {
+    if (src.includes(key)) pStart = nodeCoords[key];
+    if (dest.includes(key)) pEnd = nodeCoords[key];
+  }
+
+  return {
+    x: pStart.x + (pEnd.x - pStart.x) * (progress / 100),
+    y: pStart.y + (pEnd.y - pStart.y) * (progress / 100),
+  };
+};
+
 const Dashboard = () => {
   const { vehicles, drivers, trips } = useData();
 
   const [vehicleType, setVehicleType] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [regionFilter, setRegionFilter] = useState('All');
+
+  // Simulation tick states for active trips
+  const [simulationTicks, setSimulationTicks] = useState({});
+
+  const activeDispatchedTrips = useMemo(() => {
+    return trips.filter(t => t.status === 'Dispatched');
+  }, [trips]);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setSimulationTicks(prev => {
+        const next = { ...prev };
+        activeDispatchedTrips.forEach(t => {
+          const current = prev[t.id] || 0;
+          if (current >= 100) {
+            next[t.id] = 0; // wrap around
+          } else {
+            next[t.id] = current + 3; // increment progress
+          }
+        });
+        return next;
+      });
+    }, 600);
+
+    return () => clearInterval(interval);
+  }, [activeDispatchedTrips]);
 
   // ── Compute KPIs from live data ──
   const filteredVehicles = useMemo(() => {
@@ -102,6 +156,106 @@ const Dashboard = () => {
             <span className="kpi-value">{kpi.value}</span>
           </div>
         ))}
+      </div>
+
+      {/* Live Operations & GPS Map Widget */}
+      <div className="card live-map-card">
+        <h3 className="section-title">🗺️ Live Fleet Operations & GPS Tracking</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '2.5fr 1.2fr', gap: '1.5rem', alignItems: 'center' }}>
+          
+          {/* SVG Map Container */}
+          <div className="svg-map-wrapper" style={{ position: 'relative', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '1rem', overflow: 'hidden' }}>
+            <svg viewBox="0 0 500 240" style={{ width: '100%', height: 'auto', display: 'block' }}>
+              <defs>
+                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="var(--border)" strokeWidth="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+
+              {/* Connecting Routes */}
+              <line x1="80" y1="50" x2="250" y2="100" stroke="var(--text-muted)" strokeWidth="1.5" strokeDasharray="4,4" />
+              <line x1="250" y1="100" x2="150" y2="180" stroke="var(--text-muted)" strokeWidth="1.5" strokeDasharray="4,4" />
+              <line x1="80" y1="50" x2="150" y2="180" stroke="var(--text-muted)" strokeWidth="1.5" strokeDasharray="4,4" />
+              <line x1="250" y1="100" x2="380" y2="140" stroke="var(--text-muted)" strokeWidth="1.5" strokeDasharray="4,4" />
+              <line x1="340" y1="60" x2="250" y2="100" stroke="var(--text-muted)" strokeWidth="1.5" strokeDasharray="4,4" />
+
+              {/* Hub A: Gandhinagar */}
+              <circle cx="80" cy="50" r="7" fill="var(--primary)" />
+              <circle cx="80" cy="50" r="13" fill="none" stroke="var(--primary)" strokeWidth="1.5" className="pulse-circle" />
+              <text x="80" y="32" textAnchor="middle" fill="var(--text-primary)" fontSize="9" fontWeight="bold">Gandhinagar Depot</text>
+
+              {/* Hub B: Ahmedabad */}
+              <circle cx="250" cy="100" r="7" fill="var(--success)" />
+              <circle cx="250" cy="100" r="13" fill="none" stroke="var(--success)" strokeWidth="1.5" className="pulse-circle" />
+              <text x="250" y="82" textAnchor="middle" fill="var(--text-primary)" fontSize="9" fontWeight="bold">Ahmedabad Hub</text>
+
+              {/* Hub C: Sanand */}
+              <circle cx="150" cy="180" r="7" fill="var(--accent)" />
+              <circle cx="150" cy="180" r="13" fill="none" stroke="var(--accent)" strokeWidth="1.5" className="pulse-circle" />
+              <text x="150" y="198" textAnchor="middle" fill="var(--text-primary)" fontSize="9" fontWeight="bold">Sanand Warehouse</text>
+
+              {/* Hub D: Vatva */}
+              <circle cx="380" cy="140" r="7" fill="var(--info)" />
+              <circle cx="380" cy="140" r="13" fill="none" stroke="var(--info)" strokeWidth="1.5" className="pulse-circle" />
+              <text x="380" y="158" textAnchor="middle" fill="var(--text-primary)" fontSize="9" fontWeight="bold">Vatva Depot</text>
+
+              {/* Hub E: Naroda */}
+              <circle cx="340" cy="60" r="7" fill="#ec4899" />
+              <circle cx="340" cy="60" r="13" fill="none" stroke="#ec4899" strokeWidth="1.5" className="pulse-circle" />
+              <text x="340" y="44" textAnchor="middle" fill="var(--text-primary)" fontSize="9" fontWeight="bold">Naroda Hub</text>
+
+              {/* Moving Vehicle Dots */}
+              {activeDispatchedTrips.map((trip) => {
+                const pos = getRouteCoordinates(trip.source, trip.destination, simulationTicks[trip.id] || 0);
+                const veh = vehicles.find(v => v.id === trip.vehicleId);
+                const reg = veh ? veh.registrationNumber : 'Unknown';
+
+                return (
+                  <g key={trip.id}>
+                    <circle cx={pos.x} cy={pos.y} r="5" fill="#ef4444" />
+                    <circle cx={pos.x} cy={pos.y} r="9" fill="none" stroke="#ef4444" strokeWidth="1.5" className="pulse-circle-fast" />
+                    <text x={pos.x} y={pos.y - 8} textAnchor="middle" fill="var(--text-primary)" fontSize="8" fontWeight="bold">
+                      {reg}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+
+          {/* Sidebar tracker feed */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '240px', overflowY: 'auto', paddingRight: '0.25rem' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)', paddingBottom: '0.375rem' }}>
+              📡 GPS Live Feed
+            </div>
+            {activeDispatchedTrips.length === 0 ? (
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '1rem 0' }}>
+                No active tracking logs. Dispatch a trip to start.
+              </div>
+            ) : (
+              activeDispatchedTrips.map(trip => {
+                const veh = vehicles.find(v => v.id === trip.vehicleId);
+                const reg = veh ? veh.registrationNumber : 'Unknown';
+                const progress = Math.round(simulationTicks[trip.id] || 0);
+                return (
+                  <div key={trip.id} style={{ padding: '0.5rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--bg-secondary)', fontSize: '0.75rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, marginBottom: '0.25rem' }}>
+                      <span style={{ color: 'var(--primary)' }}>{reg}</span>
+                      <span style={{ color: 'var(--danger)' }}>{progress}% Route</span>
+                    </div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {trip.source} ➔ {trip.destination}
+                    </div>
+                    <div style={{ marginTop: '0.375rem', height: '4px', backgroundColor: 'var(--border)', borderRadius: '2px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${progress}%`, backgroundColor: 'var(--primary)', transition: 'width 0.6s' }} />
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Bottom Section */}

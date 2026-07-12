@@ -59,6 +59,22 @@ const Settings = () => {
   const [distanceUnit, setDistanceUnit] = useState('Kilometers');
   const [saved, setSaved] = useState(false);
 
+  // Dark mode - read from localStorage on mount
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('transitops_theme') === 'dark';
+  });
+
+  // Apply theme on mount and when toggled
+  React.useEffect(() => {
+    if (darkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('transitops_theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('transitops_theme', 'light');
+    }
+  }, [darkMode]);
+
   // Delete confirm
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -168,6 +184,25 @@ const Settings = () => {
               value={distanceUnit}
               onChange={(e) => setDistanceUnit(e.target.value)}
             />
+          </div>
+
+          {/* Dark Mode Toggle */}
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '1rem 0', marginTop: '0.5rem', borderTop: '1px solid var(--border)',
+          }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                {darkMode ? '🌙' : '☀️'} Dark Mode
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Switch between light and dark theme
+              </div>
+            </div>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={darkMode} onChange={() => setDarkMode(!darkMode)} />
+              <span className="toggle-slider" />
+            </label>
           </div>
 
           <button type="submit" className="btn-save-settings">

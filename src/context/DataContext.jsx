@@ -52,11 +52,52 @@ const initialState = { vehicles: [], drivers: [], trips: [], maintenance: [], fu
 
 export function DataProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [notifications, setNotifications] = React.useState([]);
 
-  useEffect(() => {
+  const addNotification = React.useCallback((message, type = 'info') => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setNotifications((prev) => [
+      { id, message, type, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+      ...prev
+    ]);
+  }, []);
+
+  const clearNotification = React.useCallback((id) => {
+    setNotifications((prev) => prev.filter(n => n.id !== id));
+  }, []);
+
+  // Utility helper for names inside scanner
+  const getVehicleReg = React.useCallback((id) => {
+    const v = state.vehicles.find(x => x.id === id);
+    return v ? v.registrationNumber : 'Unknown';
+  }, [state.vehicles]);
+
+  // Run compliance scans when database is loaded
+  React.useEffect(() => {
     db.seedDatabase();
     dispatch({ type: ACTIONS.INIT });
-  }, []);
+
+    // Read directly from DB to do startup compliance alert scan
+    const vehiclesData = db.getAll('vehicles');
+    const driversData = db.getAll('drivers');
+    const maintData = db.getAll('maintenance');
+    const today = new Date().toISOString().split('T')[0];
+
+    driversData.forEach(d => {
+      if (d.licenseExpiry < today) {
+        addNotification(`Compliance Alert: Driver ${d.name}'s license is EXPIRED (${d.licenseExpiry}).`, 'warning');
+      } else if (d.safetyScore < 60) {
+        addNotification(`Safety Alert: Driver ${d.name}'s safety rating is low (${d.safetyScore}/100).`, 'warning');
+      }
+    });
+
+    maintData.forEach(m => {
+      if (m.status === 'In Progress' || m.status === 'In Shop') {
+        const reg = vehiclesData.find(v => v.id === m.vehicleId)?.registrationNumber || 'Unknown';
+        addNotification(`Operations: Vehicle ${reg} is undergoing ${m.type}.`, 'info');
+      }
+    });
+  }, [addNotification]);
 
   const reload = useCallback(() => dispatch({ type: ACTIONS.RELOAD_ALL }), []);
 
@@ -67,40 +108,49 @@ export function DataProvider({ children }) {
     if (existing) throw new Error(`Vehicle with registration ${data.registrationNumber} already exists.`);
     db.create('vehicles', data);
     dispatch({ type: ACTIONS.SET_VEHICLES });
-  }, [state.vehicles]);
+    addNotification(`Vehicle ${data.registrationNumber} added to registry.`, 'success');
+  }, [state.vehicles, addNotification]);
 
   const updateVehicle = useCallback((id, data) => {
     db.update('vehicles', id, data);
     dispatch({ type: ACTIONS.SET_VEHICLES });
-  }, []);
+    addNotification(`Vehicle ${data.registrationNumber} details updated.`, 'info');
+  }, [addNotification]);
 
   const deleteVehicle = useCallback((id) => {
+    const v = db.getById('vehicles', id);
     db.remove('vehicles', id);
     dispatch({ type: ACTIONS.SET_VEHICLES });
-  }, []);
+    if (v) addNotification(`Vehicle ${v.registrationNumber} deleted from registry.`, 'info');
+  }, [addNotification]);
 
   // ── Driver CRUD ──
   const addDriver = useCallback((data) => {
     db.create('drivers', data);
     dispatch({ type: ACTIONS.SET_DRIVERS });
-  }, []);
+    addNotification(`Driver ${data.name} registered.`, 'success');
+  }, [addNotification]);
 
   const updateDriver = useCallback((id, data) => {
     db.update('drivers', id, data);
     dispatch({ type: ACTIONS.SET_DRIVERS });
-  }, []);
+    addNotification(`Driver ${data.name} details updated.`, 'info');
+  }, [addNotification]);
 
   const deleteDriver = useCallback((id) => {
+    const d = db.getById('drivers', id);
     db.remove('drivers', id);
     dispatch({ type: ACTIONS.SET_DRIVERS });
-  }, []);
+    if (d) addNotification(`Driver ${d.name} deleted.`, 'info');
+  }, [addNotification]);
 
   // ── Trip Management (with business rules) ──
   const createTrip = useCallback((data) => {
     const trip = { ...data, status: 'Draft' };
     db.create('trips', trip);
     dispatch({ type: ACTIONS.SET_TRIPS });
-  }, []);
+    addNotification(`New trip draft created from ${data.source} to ${data.destination}.`, 'info');
+  }, [addNotification]);
 
   const dispatchTrip = useCallback((tripId) => {
     const trip = db.getById('trips', tripId);
@@ -124,7 +174,8 @@ export function DataProvider({ children }) {
     db.update('drivers', trip.driverId, { status: 'On Trip' });
 
     dispatch({ type: ACTIONS.RELOAD_ALL });
-  }, []);
+    addNotification(`Trip dispatched: ${vehicle.registrationNumber} (Driver: ${driver.name}) heading to ${trip.destination}.`, 'success');
+  }, [addNotification]);
 
   const completeTrip = useCallback((tripId, { endOdometer, fuelConsumed, revenue }) => {
     const trip = db.getById('trips', tripId);
@@ -150,7 +201,8 @@ export function DataProvider({ children }) {
     }
 
     dispatch({ type: ACTIONS.RELOAD_ALL });
-  }, []);
+    addNotification(`Trip completed successfully: ${actualDistance} km covered. Revenue: ₹${Number(revenue).toLocaleString('en-IN')}.`, 'success');
+  }, [addNotification]);
 
   const cancelTrip = useCallback((tripId) => {
     const trip = db.getById('trips', tripId);
@@ -164,14 +216,17 @@ export function DataProvider({ children }) {
 
     db.update('trips', tripId, { status: 'Cancelled' });
     dispatch({ type: ACTIONS.RELOAD_ALL });
-  }, []);
+    addNotification(`Trip from ${trip.source} to ${trip.destination} has been cancelled.`, 'warning');
+  }, [addNotification]);
 
   // ── Maintenance ──
   const createMaintenance = useCallback((data) => {
     db.create('maintenance', { ...data, status: 'In Progress' });
     db.update('vehicles', data.vehicleId, { status: 'In Shop' });
     dispatch({ type: ACTIONS.RELOAD_ALL });
-  }, []);
+    const reg = db.getById('vehicles', data.vehicleId)?.registrationNumber || 'Vehicle';
+    addNotification(`Maintenance scheduled: ${reg} is now IN SHOP for ${data.type}.`, 'info');
+  }, [addNotification]);
 
   const completeMaintenance = useCallback((maintenanceId) => {
     const record = db.getById('maintenance', maintenanceId);
@@ -183,22 +238,30 @@ export function DataProvider({ children }) {
       db.update('vehicles', record.vehicleId, { status: 'Available' });
     }
     dispatch({ type: ACTIONS.RELOAD_ALL });
-  }, []);
+    addNotification(`Service resolved for ${vehicle?.registrationNumber}. Vehicle is back online.`, 'success');
+  }, [addNotification]);
 
   // ── Fuel & Expenses ──
   const addFuelLog = useCallback((data) => {
-    db.create('fuelLogs', { ...data, totalCost: data.liters * data.costPerLiter });
+    const total = data.liters * data.costPerLiter;
+    db.create('fuelLogs', { ...data, totalCost: total });
     dispatch({ type: ACTIONS.SET_FUEL_LOGS });
-  }, []);
+    const reg = db.getById('vehicles', data.vehicleId)?.registrationNumber || 'Vehicle';
+    addNotification(`Logged ${data.liters}L fuel for ${reg}. Total cost: ₹${total.toLocaleString('en-IN')}`, 'info');
+  }, [addNotification]);
 
   const addExpense = useCallback((data) => {
     db.create('expenses', data);
     dispatch({ type: ACTIONS.SET_EXPENSES });
-  }, []);
+    addNotification(`Expense logged: ${data.type} amount ₹${data.amount.toLocaleString('en-IN')}`, 'info');
+  }, [addNotification]);
 
   const value = {
     ...state,
     reload,
+    notifications,
+    clearNotification,
+    addNotification,
     addVehicle, updateVehicle, deleteVehicle,
     addDriver, updateDriver, deleteDriver,
     createTrip, dispatchTrip, completeTrip, cancelTrip,
