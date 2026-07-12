@@ -10,6 +10,7 @@ import Trips from './pages/Trips/Trips';
 import Maintenance from './pages/Maintenance/Maintenance';
 import FuelExpenses from './pages/FuelExpenses/FuelExpenses';
 import Analytics from './pages/Analytics/Analytics';
+import Settings from './pages/Settings/Settings';
 
 function AppContent() {
   const { user } = useAuth();
@@ -36,7 +37,7 @@ function AppContent() {
       case 'analytics':
         return <Analytics />;
       case 'settings':
-        return <PlaceholderPage title="Settings" icon="⚙️" description="Settings page coming soon!" />;
+        return <Settings />;
       default:
         return <Dashboard />;
     }
@@ -49,15 +50,7 @@ function AppContent() {
   );
 }
 
-function PlaceholderPage({ title, icon, description }) {
-  return (
-    <div className="empty-state" style={{ marginTop: '4rem' }}>
-      <div className="empty-state-icon" style={{ fontSize: '3rem' }}>{icon}</div>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>{title}</h2>
-      <div className="empty-state-text">{description}</div>
-    </div>
-  );
-}
+
 
 function App() {
   return (
