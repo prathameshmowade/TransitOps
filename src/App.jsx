@@ -5,6 +5,9 @@ import Login from './pages/Login/Login';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Fleet from './pages/Fleet/Fleet';
+import Drivers from './pages/Drivers/Drivers';
+import Trips from './pages/Trips/Trips';
+import Maintenance from './pages/Maintenance/Maintenance';
 
 function AppContent() {
   const { user } = useAuth();
@@ -21,11 +24,11 @@ function AppContent() {
       case 'fleet':
         return <Fleet />;
       case 'drivers':
-        return <PlaceholderPage title="Driver Management" icon="👤" description="Driver profiles coming soon — provide the screenshot!" />;
+        return <Drivers />;
       case 'trips':
-        return <PlaceholderPage title="Trip Management" icon="🗺️" description="Trip lifecycle management coming soon — provide the screenshot!" />;
+        return <Trips />;
       case 'maintenance':
-        return <PlaceholderPage title="Maintenance" icon="🔧" description="Maintenance workflow coming soon — provide the screenshot!" />;
+        return <Maintenance />;
       case 'fuel':
         return <PlaceholderPage title="Fuel & Expenses" icon="⛽" description="Fuel and expense tracking coming soon — provide the screenshot!" />;
       case 'analytics':

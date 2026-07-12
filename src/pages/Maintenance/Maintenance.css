@@ -1,0 +1,96 @@
+.maintenance-page {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.maintenance-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.maintenance-table-wrapper {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.maintenance-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.maintenance-table th {
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1rem;
+  border-bottom: 1.5px solid var(--border);
+  background-color: var(--bg-secondary);
+}
+
+.maintenance-table td {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.maintenance-table tbody tr:hover {
+  background-color: var(--bg-secondary);
+}
+
+.maintenance-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.maintenance-cost {
+  font-weight: 600;
+}
+
+/* Form Panel */
+.maintenance-form-panel {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  position: sticky;
+  top: 5rem;
+}
+
+.maintenance-form-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.maintenance-rule-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  color: #1e3a8a;
+  margin-top: 1rem;
+}
+
+@media (max-width: 900px) {
+  .maintenance-page {
+    grid-template-columns: 1fr;
+  }
+  .maintenance-form-panel {
+    position: static;
+  }
+}

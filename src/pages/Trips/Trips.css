@@ -1,0 +1,174 @@
+.trips-page {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Left Panel: Create Trip */
+.trip-form-panel {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+}
+
+.trip-form-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Form actions */
+.trip-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.trip-form-actions button {
+  flex: 1;
+}
+
+/* Right Panel: Live Board */
+.live-board-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.live-board-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+}
+
+.live-board-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Live Trip Card */
+.live-trip-card {
+  background-color: var(--bg-primary);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.live-trip-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-sm);
+}
+
+.live-trip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.live-trip-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.live-trip-id {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.live-trip-divider {
+  color: var(--text-muted);
+}
+
+.live-trip-assets {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.live-trip-route {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 0.25rem;
+}
+
+.live-trip-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.live-trip-badge {
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.live-trip-eta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.live-trip-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  border-top: 1px solid var(--bg-tertiary);
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* Red error validation warning block matching mockup */
+.capacity-error-block {
+  background-color: var(--danger-light);
+  border: 1.5px solid var(--danger);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  color: var(--danger);
+  font-size: 0.825rem;
+  line-height: 1.4;
+}
+
+.capacity-error-title {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.capacity-error-details {
+  font-weight: 500;
+}
+
+/* Info footnote at bottom */
+.live-board-footnote {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 1rem;
+  font-style: italic;
+}
+
+@media (max-width: 900px) {
+  .trips-page {
+    grid-template-columns: 1fr;
+  }
+}
