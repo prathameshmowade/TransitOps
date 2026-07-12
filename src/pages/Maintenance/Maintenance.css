@@ -1,14 +1,135 @@
 .maintenance-page {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: 360px 1fr;
   gap: 2rem;
   align-items: start;
 }
 
+/* Left Panel: Log Service Record Form */
+.maintenance-form-panel {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+}
+
+.maintenance-form-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Save button matching mockup */
+.btn-save-maintenance {
+  background-color: var(--accent);
+  color: white;
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+  width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.5rem;
+}
+
+.btn-save-maintenance:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Lifecycle flow visualization in form */
+.maintenance-flow-diagram {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.flow-step-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.flow-step-line span:first-child {
+  width: 65px;
+  text-align: right;
+}
+
+.flow-step-line span:last-child {
+  font-weight: 700;
+}
+
+.flow-arrow {
+  flex: 1;
+  text-align: center;
+  color: var(--text-muted);
+  position: relative;
+  height: 12px;
+}
+
+.flow-arrow::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--text-muted);
+}
+
+.flow-arrow::after {
+  content: '➔';
+  position: absolute;
+  right: -2px;
+  top: -2px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.flow-text-small {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  background-color: var(--bg-primary);
+  padding: 0 4px;
+}
+
+.maintenance-footnote {
+  font-size: 0.75rem;
+  color: #b45309;
+  line-height: 1.4;
+  margin-top: 0.25rem;
+}
+
+/* Right Panel: Service Log Table */
 .maintenance-list-section {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.maintenance-list-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
 }
 
 .maintenance-table-wrapper {
@@ -54,43 +175,23 @@
   font-weight: 600;
 }
 
-/* Form Panel */
-.maintenance-form-panel {
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  position: sticky;
-  top: 5rem;
+.btn-resolve-maintenance {
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  background: none;
+  transition: all 0.12s ease;
 }
 
-.maintenance-form-title {
-  font-size: 1.15rem;
-  font-weight: 800;
-  margin-bottom: 1.5rem;
-  color: var(--text-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.maintenance-rule-note {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background-color: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: var(--radius-md);
-  font-size: 0.8rem;
-  color: #1e3a8a;
-  margin-top: 1rem;
+.btn-resolve-maintenance:hover {
+  background-color: var(--primary-light);
 }
 
 @media (max-width: 900px) {
   .maintenance-page {
     grid-template-columns: 1fr;
-  }
-  .maintenance-form-panel {
-    position: static;
   }
 }

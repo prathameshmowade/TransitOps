@@ -3,11 +3,6 @@ import { useData } from '../../context/DataContext';
 import { validateMaintenance, hasErrors } from '../../utils/validators';
 import './Maintenance.css';
 
-const statusBadge = {
-  'In Progress': 'badge-warning',
-  'Completed': 'badge-success',
-};
-
 const Maintenance = () => {
   const {
     maintenance,
@@ -25,8 +20,7 @@ const Maintenance = () => {
   const [formErrors, setFormErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
 
-  // Dropdown list: only show active (non-retired) vehicles for maintenance.
-  // Note: Vehicles that are already "In Shop" can have new maintenance logs, but typically we add Available/On Trip ones.
+  // Dropdown list: show all non-retired vehicles
   const activeVehicles = useMemo(() => {
     return vehicles.filter(v => v.status !== 'Retired');
   }, [vehicles]);
@@ -53,7 +47,7 @@ const Maintenance = () => {
       createMaintenance({
         vehicleId: selectedVehicleId,
         type: type.trim(),
-        description: description.trim(),
+        description: description.trim() || `${type.trim()} service`,
         cost: Number(cost),
         startDate,
       });
@@ -74,77 +68,9 @@ const Maintenance = () => {
 
   return (
     <div className="maintenance-page">
-      {/* Left Column: Logs List */}
-      <div className="maintenance-list-section">
-        <h2 className="section-title">Maintenance Logs</h2>
-
-        <div className="maintenance-table-wrapper">
-          {maintenance.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">🔧</div>
-              <div className="empty-state-text">No maintenance records found</div>
-            </div>
-          ) : (
-            <table className="maintenance-table">
-              <thead>
-                <tr>
-                  <th>Vehicle</th>
-                  <th>Service Type</th>
-                  <th>Description</th>
-                  <th>Cost</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...maintenance]
-                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                  .map((log) => (
-                    <tr key={log.id}>
-                      <td style={{ fontWeight: 600 }}>{getVehicleReg(log.vehicleId)}</td>
-                      <td style={{ fontWeight: 500 }}>{log.type}</td>
-                      <td style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={log.description}>
-                        {log.description || '—'}
-                      </td>
-                      <td className="maintenance-cost">₹{log.cost.toLocaleString('en-IN')}</td>
-                      <td>{log.startDate}</td>
-                      <td>{log.endDate || '—'}</td>
-                      <td>
-                        <span className={`badge ${statusBadge[log.status] || 'badge-neutral'}`}>
-                          {log.status}
-                        </span>
-                      </td>
-                      <td>
-                        {log.status === 'In Progress' && (
-                          <button
-                            className="btn btn-primary btn-sm"
-                            onClick={() => completeMaintenance(log.id)}
-                          >
-                            Resolve
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        {/* Business Rule Note */}
-        <div className="maintenance-rule-note">
-          <span>ℹ️</span>
-          <span>
-            <strong>Rule:</strong> Creating a maintenance record switches vehicle status to <strong>In Shop</strong> (hidden from dispatcher selection pool). Closing/resolving it restores status to <strong>Available</strong>.
-          </span>
-        </div>
-      </div>
-
-      {/* Right Column: Create Log Form */}
+      {/* Left Column: Log Service Record */}
       <div className="maintenance-form-panel">
-        <h3 className="maintenance-form-title">Create Log</h3>
+        <h3 className="maintenance-form-title">Log Service Record</h3>
 
         {submitError && <div className="alert alert-error"><span>✗</span> {submitError}</div>}
 
@@ -171,7 +97,7 @@ const Maintenance = () => {
             <input
               type="text"
               className={`form-input ${formErrors.type ? 'error' : ''}`}
-              placeholder="e.g., Oil Change, Tire Rotation"
+              placeholder="e.g., Oil Change"
               value={type}
               onChange={(e) => { setType(e.target.value); setFormErrors(p => ({ ...p, type: undefined })); }}
             />
@@ -183,7 +109,7 @@ const Maintenance = () => {
             <input
               type="number"
               className={`form-input ${formErrors.cost ? 'error' : ''}`}
-              placeholder="e.g., 3500"
+              placeholder="e.g., 2500"
               value={cost}
               onChange={(e) => { setCost(e.target.value); setFormErrors(p => ({ ...p, cost: undefined })); }}
               min="0"
@@ -192,7 +118,7 @@ const Maintenance = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Start Date *</label>
+            <label className="form-label">Date *</label>
             <input
               type="date"
               className={`form-input ${formErrors.startDate ? 'error' : ''}`}
@@ -203,24 +129,112 @@ const Maintenance = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Description / Remarks</label>
+            <label className="form-label">Status</label>
+            <input
+              type="text"
+              className="form-input"
+              value="Active"
+              disabled
+              style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Remarks / Description</label>
             <textarea
               className="form-input"
-              style={{ minHeight: '80px', resize: 'vertical' }}
-              placeholder="Enter service details..."
+              style={{ minHeight: '60px', resize: 'vertical' }}
+              placeholder="e.g., Coolant replacement..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
-          <button
-            type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', marginTop: '0.5rem' }}
-          >
-            Create Maintenance Log
+          <button type="submit" className="btn-save-maintenance">
+            Save
           </button>
         </form>
+
+        {/* Mockup Flow Visualization */}
+        <div className="maintenance-flow-diagram">
+          <div className="flow-step-line">
+            <span style={{ color: 'var(--success)' }}>Available</span>
+            <div className="flow-arrow">
+              <span className="flow-text-small">creating active record</span>
+            </div>
+            <span style={{ color: 'var(--warning)' }}>In Shop</span>
+          </div>
+
+          <div className="flow-step-line">
+            <span style={{ color: 'var(--warning)' }}>In Shop</span>
+            <div className="flow-arrow">
+              <span className="flow-text-small">closing record (unless retired)</span>
+            </div>
+            <span style={{ color: 'var(--success)' }}>Available</span>
+          </div>
+
+          <div className="maintenance-footnote">
+            <strong>Note:</strong> In Shop vehicles are removed from the dispatch pool.
+          </div>
+        </div>
+      </div>
+
+      {/* Right Column: Service Log */}
+      <div className="maintenance-list-section">
+        <h2 className="live-board-title">Service Log</h2>
+
+        <div className="maintenance-table-wrapper">
+          {maintenance.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">🔧</div>
+              <div className="empty-state-text">No service logs logged yet.</div>
+            </div>
+          ) : (
+            <table className="maintenance-table">
+              <thead>
+                <tr>
+                  <th>Vehicle</th>
+                  <th>Service</th>
+                  <th>Cost</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...maintenance]
+                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                  .map((log) => {
+                    const isOngoing = log.status === 'In Progress' || log.status === 'In Shop';
+                    const badgeText = isOngoing ? 'In Shop' : 'Completed';
+                    const badgeClass = isOngoing ? 'badge-warning' : 'badge-success';
+
+                    return (
+                      <tr key={log.id}>
+                        <td style={{ fontWeight: 700 }}>{getVehicleReg(log.vehicleId)}</td>
+                        <td>{log.type}</td>
+                        <td className="maintenance-cost">₹{Number(log.cost).toLocaleString('en-IN')}</td>
+                        <td>
+                          <span className={`badge ${badgeClass}`}>
+                            {badgeText}
+                          </span>
+                        </td>
+                        <td>
+                          {isOngoing && (
+                            <button
+                              className="btn-resolve-maintenance"
+                              onClick={() => completeMaintenance(log.id)}
+                            >
+                              Resolve
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );
