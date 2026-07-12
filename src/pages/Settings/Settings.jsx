@@ -3,17 +3,63 @@ import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
 import './Settings.css';
 
+// RBAC permissions matrix matching the mockup
+const rbacMatrix = [
+  {
+    role: 'Fleet Manager',
+    fleet: 'full',
+    dashboard: 'full',
+    drivers: 'none',
+    trips: 'none',
+    fuelMaint: 'none',
+    analytics: 'full',
+  },
+  {
+    role: 'Dispatcher',
+    fleet: 'view',
+    dashboard: 'none',
+    drivers: 'none',
+    trips: 'full',
+    fuelMaint: 'none',
+    analytics: 'none',
+  },
+  {
+    role: 'Safety Officer',
+    fleet: 'none',
+    dashboard: 'full',
+    drivers: 'full',
+    trips: 'view',
+    fuelMaint: 'none',
+    analytics: 'none',
+  },
+  {
+    role: 'Financial Analyst',
+    fleet: 'view',
+    dashboard: 'none',
+    drivers: 'none',
+    trips: 'none',
+    fuelMaint: 'full',
+    analytics: 'full',
+  },
+];
+
+const renderAccess = (level) => {
+  if (level === 'full') return <span className="rbac-check">✓</span>;
+  if (level === 'view') return <span className="rbac-view">view</span>;
+  return <span className="rbac-dash">—</span>;
+};
+
 const Settings = () => {
   const { user, logout } = useAuth();
   const { vehicles, drivers, trips, maintenance, fuelLogs, expenses } = useData();
 
-  // Toggle preferences (saved locally for demo)
-  const [autoSeed, setAutoSeed] = useState(true);
-  const [showNotifications, setShowNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
-  const [compactView, setCompactView] = useState(false);
+  // General settings form
+  const [depotName, setDepotName] = useState('Gandhinagar Depot GTJ');
+  const [currency, setCurrency] = useState('INR (Rs)');
+  const [distanceUnit, setDistanceUnit] = useState('Kilometers');
+  const [saved, setSaved] = useState(false);
 
-  // Confirm Reset State
+  // Delete confirm
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Data stats
@@ -28,7 +74,6 @@ const Settings = () => {
 
   const totalRecords = Object.values(stats).reduce((sum, val) => sum + val, 0);
 
-  // Estimate storage usage
   const storageUsed = useMemo(() => {
     let total = 0;
     for (let key in localStorage) {
@@ -36,11 +81,20 @@ const Settings = () => {
         total += (localStorage.getItem(key) || '').length;
       }
     }
-    return (total / 1024).toFixed(1); // KB
+    return (total / 1024).toFixed(1);
   }, []);
 
+  const handleSaveGeneral = (e) => {
+    e.preventDefault();
+    // Save to localStorage
+    localStorage.setItem('transitops_settings', JSON.stringify({
+      depotName, currency, distanceUnit,
+    }));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
   const handleResetData = () => {
-    // Clear all transitops_ keys from localStorage
     const keysToRemove = [];
     for (let key in localStorage) {
       if (key.startsWith('transitops_')) {
@@ -49,7 +103,6 @@ const Settings = () => {
     }
     keysToRemove.forEach(key => localStorage.removeItem(key));
     setShowResetConfirm(false);
-    // Logout and reload to re-seed data
     logout();
     window.location.reload();
   };
@@ -65,7 +118,6 @@ const Settings = () => {
         }
       }
     }
-
     const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -83,158 +135,142 @@ const Settings = () => {
 
   return (
     <div className="settings-page">
-      {/* Profile Section */}
-      <div className="settings-section">
-        <h3 className="settings-section-title">
-          <span className="settings-section-title-icon">👤</span>
-          Profile
-        </h3>
-        <div className="profile-card">
-          <div className="profile-avatar">{userInitials}</div>
-          <div className="profile-info">
-            <span className="profile-name">{user?.name || 'User'}</span>
-            <span className="profile-role">{user?.role || 'Unknown'}</span>
-            <span className="profile-email">{user?.email || ''}</span>
+      {/* Left Column: General Settings */}
+      <div className="settings-general-panel">
+        <h3 className="settings-section-title">General</h3>
+
+        <form onSubmit={handleSaveGeneral}>
+          <div className="form-group">
+            <label className="form-label">Depot Name</label>
+            <input
+              type="text"
+              className="form-input"
+              value={depotName}
+              onChange={(e) => setDepotName(e.target.value)}
+            />
           </div>
-        </div>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-          Role-based access is enforced. To change your role, log out and sign in with a different account.
-        </p>
+
+          <div className="form-group">
+            <label className="form-label">Currency</label>
+            <input
+              type="text"
+              className="form-input"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Distance Unit</label>
+            <input
+              type="text"
+              className="form-input"
+              value={distanceUnit}
+              onChange={(e) => setDistanceUnit(e.target.value)}
+            />
+          </div>
+
+          <button type="submit" className="btn-save-settings">
+            Save Changes
+          </button>
+
+          {saved && (
+            <div className="save-success-msg">
+              ✓ Settings saved successfully
+            </div>
+          )}
+        </form>
       </div>
 
-      {/* Preferences Section */}
-      <div className="settings-section">
-        <h3 className="settings-section-title">
-          <span className="settings-section-title-icon">⚙️</span>
-          Preferences
-        </h3>
+      {/* Right Column: RBAC Table */}
+      <div className="settings-rbac-section">
+        <h3 className="settings-section-title">Role-Based Access (RBAC)</h3>
 
-        <div className="settings-toggle-row">
-          <div className="toggle-label-group">
-            <span className="toggle-label">Auto-Seed Demo Data</span>
-            <span className="toggle-description">Populate the database with sample vehicles, drivers, and trips on first load.</span>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={autoSeed} onChange={() => setAutoSeed(!autoSeed)} />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-
-        <div className="settings-toggle-row">
-          <div className="toggle-label-group">
-            <span className="toggle-label">Show Notifications</span>
-            <span className="toggle-description">Display toast notifications for status changes and validation errors.</span>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={showNotifications} onChange={() => setShowNotifications(!showNotifications)} />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-
-        <div className="settings-toggle-row">
-          <div className="toggle-label-group">
-            <span className="toggle-label">Dark Mode</span>
-            <span className="toggle-description">Switch to a dark color scheme (coming soon).</span>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={darkMode} onChange={() => setDarkMode(!darkMode)} />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-
-        <div className="settings-toggle-row">
-          <div className="toggle-label-group">
-            <span className="toggle-label">Compact Table View</span>
-            <span className="toggle-description">Reduce table row padding for denser data display.</span>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={compactView} onChange={() => setCompactView(!compactView)} />
-            <span className="toggle-slider" />
-          </label>
+        <div className="rbac-table-wrapper">
+          <table className="rbac-table">
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Fleet</th>
+                <th>Dashboard</th>
+                <th>Drivers</th>
+                <th>Trips</th>
+                <th>Fuel/Maint</th>
+                <th>Analytics</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rbacMatrix.map((row) => (
+                <tr key={row.role} style={user?.role === row.role ? { backgroundColor: 'var(--primary-light)' } : {}}>
+                  <td>{row.role}</td>
+                  <td>{renderAccess(row.fleet)}</td>
+                  <td>{renderAccess(row.dashboard)}</td>
+                  <td>{renderAccess(row.drivers)}</td>
+                  <td>{renderAccess(row.trips)}</td>
+                  <td>{renderAccess(row.fuelMaint)}</td>
+                  <td>{renderAccess(row.analytics)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Data Management Section */}
-      <div className="settings-section">
-        <h3 className="settings-section-title">
-          <span className="settings-section-title-icon">💾</span>
-          Data Management
-        </h3>
+      {/* Bottom Sections */}
+      <div className="settings-extra-sections">
+        {/* Profile */}
+        <div className="settings-section-card">
+          <h3 className="settings-section-title">👤 Profile</h3>
+          <div className="profile-card">
+            <div className="profile-avatar">{userInitials}</div>
+            <div className="profile-info">
+              <span className="profile-name">{user?.name || 'User'}</span>
+              <span className="profile-role">{user?.role || 'Unknown'}</span>
+              <span className="profile-email">{user?.email || ''}</span>
+            </div>
+          </div>
 
-        <div className="data-stat">
-          Total Records: <strong>{totalRecords}</strong> &nbsp;|&nbsp;
-          Storage Used: <strong>{storageUsed} KB</strong>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', margin: '0.75rem 0' }}>
-          <div className="data-stat">🚛 Vehicles: <strong>{stats.vehicles}</strong></div>
-          <div className="data-stat">👤 Drivers: <strong>{stats.drivers}</strong></div>
-          <div className="data-stat">🗺️ Trips: <strong>{stats.trips}</strong></div>
-          <div className="data-stat">🔧 Maintenance: <strong>{stats.maintenance}</strong></div>
-          <div className="data-stat">⛽ Fuel Logs: <strong>{stats.fuelLogs}</strong></div>
-          <div className="data-stat">💸 Expenses: <strong>{stats.expenses}</strong></div>
-        </div>
-
-        <div className="data-actions">
-          <button className="btn btn-primary btn-sm" onClick={handleExportAllData}>
+          <h4 className="settings-section-title" style={{ marginTop: '1.25rem' }}>💾 Data Management</h4>
+          <div className="data-stat">
+            Total Records: <strong>{totalRecords}</strong> &nbsp;|&nbsp;
+            Storage: <strong>{storageUsed} KB</strong>
+          </div>
+          <div className="data-stat-grid">
+            <div className="data-stat">🚛 Vehicles: <strong>{stats.vehicles}</strong></div>
+            <div className="data-stat">👤 Drivers: <strong>{stats.drivers}</strong></div>
+            <div className="data-stat">🗺️ Trips: <strong>{stats.trips}</strong></div>
+            <div className="data-stat">🔧 Maint: <strong>{stats.maintenance}</strong></div>
+            <div className="data-stat">⛽ Fuel: <strong>{stats.fuelLogs}</strong></div>
+            <div className="data-stat">💸 Expenses: <strong>{stats.expenses}</strong></div>
+          </div>
+          <button className="btn btn-primary btn-sm" onClick={handleExportAllData} style={{ marginTop: '0.5rem' }}>
             📥 Export All Data (JSON)
           </button>
         </div>
-      </div>
 
-      {/* Danger Zone */}
-      <div className="settings-section danger-zone">
-        <h3 className="settings-section-title">
-          <span className="settings-section-title-icon">🚨</span>
-          Danger Zone
-        </h3>
+        {/* Danger Zone */}
+        <div className="settings-section-card danger-zone">
+          <h3 className="settings-section-title">🚨 Danger Zone</h3>
+          <p className="danger-description">
+            Resetting the database will permanently delete all vehicles, drivers, trips, maintenance logs, fuel logs, and expenses.
+            The app will reload with fresh demo seed data.
+          </p>
 
-        <p className="danger-description">
-          Resetting the database will permanently delete all vehicles, drivers, trips, maintenance logs, fuel logs, and expenses.
-          The application will reload with fresh demo seed data.
-        </p>
-
-        {!showResetConfirm ? (
-          <button className="btn btn-danger" onClick={() => setShowResetConfirm(true)}>
-            Reset All Data
-          </button>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--danger)' }}>Are you sure?</span>
-            <button className="btn btn-danger btn-sm" onClick={handleResetData}>
-              Yes, Reset Everything
+          {!showResetConfirm ? (
+            <button className="btn btn-danger" onClick={() => setShowResetConfirm(true)}>
+              Reset All Data
             </button>
-            <button className="btn btn-outline btn-sm" onClick={() => setShowResetConfirm(false)}>
-              Cancel
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* About Section */}
-      <div className="settings-section">
-        <h3 className="settings-section-title">
-          <span className="settings-section-title-icon">ℹ️</span>
-          About TransitOps
-        </h3>
-
-        <div className="about-grid">
-          <div className="about-item">
-            <span className="about-item-label">Version</span>
-            <span className="about-item-value">1.0.0</span>
-          </div>
-          <div className="about-item">
-            <span className="about-item-label">Stack</span>
-            <span className="about-item-value">React + Vite</span>
-          </div>
-          <div className="about-item">
-            <span className="about-item-label">Storage</span>
-            <span className="about-item-value">localStorage</span>
-          </div>
-          <div className="about-item">
-            <span className="about-item-label">Auth</span>
-            <span className="about-item-value">RBAC (4 Roles)</span>
-          </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--danger)' }}>Are you sure?</span>
+              <button className="btn btn-danger btn-sm" onClick={handleResetData}>
+                Yes, Reset Everything
+              </button>
+              <button className="btn btn-outline btn-sm" onClick={() => setShowResetConfirm(false)}>
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
