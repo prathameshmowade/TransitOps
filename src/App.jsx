@@ -4,6 +4,7 @@ import { DataProvider } from './context/DataContext';
 import Login from './pages/Login/Login';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard/Dashboard';
+import Fleet from './pages/Fleet/Fleet';
 
 function AppContent() {
   const { user } = useAuth();
@@ -18,7 +19,7 @@ function AppContent() {
       case 'dashboard':
         return <Dashboard />;
       case 'fleet':
-        return <PlaceholderPage title="Vehicle Registry" icon="🚛" description="CRUD for vehicles coming next — provide the screenshot!" />;
+        return <Fleet />;
       case 'drivers':
         return <PlaceholderPage title="Driver Management" icon="👤" description="Driver profiles coming soon — provide the screenshot!" />;
       case 'trips':
