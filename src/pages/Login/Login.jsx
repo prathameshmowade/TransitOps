@@ -1,30 +1,43 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { validateEmail, validatePassword, hasErrors } from '../../utils/validators';
 import './Login.css';
 
-const Login = ({ onLogin }) => {
+const Login = () => {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('Dispatcher');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState('');
   const [failedAttempts, setFailedAttempts] = useState(0);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+    setServerError('');
+
+    // Validate
+    const fieldErrors = {
+      ...validateEmail(email),
+      ...validatePassword(password),
+    };
+
+    if (hasErrors(fieldErrors)) {
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setErrors({});
+
     if (failedAttempts >= 4) {
-      setError('Invalid credentials. Account locked after 5 failed attempts.');
+      setServerError('Account locked after 5 failed attempts. Please contact your administrator.');
       return;
     }
 
-    if (!email || !password) {
-      setError('Please enter both email and password.');
-      setFailedAttempts(prev => prev + 1);
-      return;
+    const result = login(email, password);
+    if (!result.success) {
+      setFailedAttempts((prev) => prev + 1);
+      setServerError(result.error);
     }
-
-    // Mock successful login
-    setError('');
-    onLogin({ email, role });
   };
 
   return (
@@ -33,10 +46,8 @@ const Login = ({ onLogin }) => {
       <div className="login-left">
         <div>
           <div className="login-brand">
-            <div className="login-logo-container">
-              <div className="login-logo-icon"></div>
-              <h1 className="login-title">TransitOps</h1>
-            </div>
+            <div className="login-logo-icon" />
+            <h1 className="login-title">TransitOps</h1>
             <p className="login-subtitle">Smart Transport Operations Platform</p>
           </div>
 
@@ -49,11 +60,17 @@ const Login = ({ onLogin }) => {
               <li>Financial Analyst</li>
             </ul>
           </div>
+
+          <div className="login-demo-credentials">
+            <p>Demo credentials (any role):</p>
+            <code>fleet@transitops.in / admin123</code><br />
+            <code>dispatch@transitops.in / admin123</code><br />
+            <code>safety@transitops.in / admin123</code><br />
+            <code>finance@transitops.in / admin123</code>
+          </div>
         </div>
 
-        <div className="login-footer">
-          TRANSITOPS © 2026 - RBAC DEMO
-        </div>
+        <div className="login-footer">TRANSITOPS © 2026 — RBAC DEMO</div>
       </div>
 
       {/* Right Panel */}
@@ -64,62 +81,47 @@ const Login = ({ onLogin }) => {
             <p className="login-form-subtitle">Enter your credentials to continue</p>
           </div>
 
-          {error && (
-            <div className="error-message">
-              <span className="error-icon">✗</span>
-              {error}
+          {serverError && (
+            <div className="alert alert-error">
+              <span>✗</span> {serverError}
             </div>
           )}
 
-          <form className="login-form" onSubmit={handleSubmit}>
+          <form className="login-form" onSubmit={handleSubmit} noValidate>
             <div className="form-group">
-              <label className="form-label" htmlFor="email">Email</label>
-              <input 
-                type="email" 
-                id="email" 
-                className="form-input" 
-                placeholder="raven.k@transitops.in"
+              <label className="form-label" htmlFor="login-email">Email</label>
+              <input
+                type="email"
+                id="login-email"
+                className={`form-input ${errors.email ? 'error' : ''}`}
+                placeholder="fleet@transitops.in"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: undefined })); }}
               />
+              {errors.email && <div className="field-error">{errors.email}</div>}
             </div>
 
             <div className="form-group">
-              <label className="form-label" htmlFor="password">Password</label>
-              <input 
-                type="password" 
-                id="password" 
-                className="form-input" 
+              <label className="form-label" htmlFor="login-password">Password</label>
+              <input
+                type="password"
+                id="login-password"
+                className={`form-input ${errors.password ? 'error' : ''}`}
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: undefined })); }}
               />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="role">Role (Mock)</label>
-              <select 
-                id="role" 
-                className="form-input"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-              >
-                <option value="Fleet Manager">Fleet Manager</option>
-                <option value="Dispatcher">Dispatcher</option>
-                <option value="Safety Officer">Safety Officer</option>
-                <option value="Financial Analyst">Financial Analyst</option>
-              </select>
+              {errors.password && <div className="field-error">{errors.password}</div>}
             </div>
 
             <div className="form-options">
               <label className="checkbox-label">
-                <input type="checkbox" defaultChecked />
-                Remember me
+                <input type="checkbox" defaultChecked /> Remember me
               </label>
               <a href="#" className="forgot-password">Forgot password?</a>
             </div>
 
-            <button type="submit" className="btn-primary">Sign In</button>
+            <button type="submit" className="btn btn-primary login-submit">Sign In</button>
 
             <div className="access-scope-info">
               <p>Access is scoped by role after login:</p>
