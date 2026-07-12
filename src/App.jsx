@@ -8,6 +8,8 @@ import Fleet from './pages/Fleet/Fleet';
 import Drivers from './pages/Drivers/Drivers';
 import Trips from './pages/Trips/Trips';
 import Maintenance from './pages/Maintenance/Maintenance';
+import FuelExpenses from './pages/FuelExpenses/FuelExpenses';
+import Analytics from './pages/Analytics/Analytics';
 
 function AppContent() {
   const { user } = useAuth();
@@ -30,9 +32,9 @@ function AppContent() {
       case 'maintenance':
         return <Maintenance />;
       case 'fuel':
-        return <PlaceholderPage title="Fuel & Expenses" icon="⛽" description="Fuel and expense tracking coming soon — provide the screenshot!" />;
+        return <FuelExpenses />;
       case 'analytics':
-        return <PlaceholderPage title="Reports & Analytics" icon="📈" description="Charts and analytics coming soon — provide the screenshot!" />;
+        return <Analytics />;
       case 'settings':
         return <PlaceholderPage title="Settings" icon="⚙️" description="Settings page coming soon!" />;
       default:

@@ -1,0 +1,67 @@
+.fuel-expenses-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.expenses-section {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+}
+
+.expenses-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.expenses-section-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.expenses-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Operational Cost Banner */
+.operational-cost-banner {
+  background-color: var(--bg-primary);
+  border: 1.5px solid var(--text-primary);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+}
+
+.cost-banner-formula {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cost-banner-value {
+  font-size: 1.75rem;
+  color: #c2410c; /* Orange/Red */
+  font-weight: 800;
+}
+
+/* Modal Form Styles */
+.form-info-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  background-color: var(--bg-secondary);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+}
